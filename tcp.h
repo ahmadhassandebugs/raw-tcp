@@ -272,7 +272,7 @@ int receive_from(int sock, char* buffer, size_t buffer_length, struct sockaddr_i
 		memcpy(&dst_port, buffer + 22, sizeof(dst_port));
 	}
 	while (dst_port != dst->sin_port);
-	printf("received bytes: %d\n", received);
-	printf("destination port: %d\n", ntohs(dst->sin_port));
+	// printf("received bytes: %d\n", received);
+	// printf("destination port: %d\n", ntohs(dst->sin_port));
 	return received;
 }

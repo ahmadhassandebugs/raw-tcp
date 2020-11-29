@@ -2,13 +2,13 @@
 
 int main(int argc, char** argv)
 {
-	if (argc != 3)
+	if (argc != 4)
 	{
 		printf("invalid parameters.\n");
-		printf("USAGE %s <listen-port> <send-port>\n", argv[0]);
+		printf("USAGE %s <listen-port> <send-port> <duration>\n", argv[0]);
 		return 1;
 	}
-	
+	double timeToRun = strtod(argv[3], NULL) + 1.0; // stop a little after the receiver finishes
 	srand(time(NULL));
 
 	int sock = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
@@ -81,26 +81,32 @@ int main(int argc, char** argv)
 
     char* packet;
 	int packet_len;
-    char request[] = "Hello there! what are you doing";
     int sent;
+	char* request = malloc(1500);
 	// // send data
-	int i = 10;
-    while (i > 0) {
-		create_data_packet(&adr_inet, &clientAddr, 1 + i, 32 + i, request, sizeof(request) - 1/sizeof(char), &packet, &packet_len);
+
+	struct timeval startTime;
+	struct timeval currentTime;
+	double relativeTime=0;
+	
+	gettimeofday(&startTime,NULL);
+	create_data_packet(&adr_inet, &clientAddr, 33, 45, request, 1440, &packet, &packet_len);
+    while (relativeTime <= timeToRun) {
         if ((sent = sendto(sock, packet, packet_len, 0, (struct sockaddr*)&clientAddr, sizeof(struct sockaddr))) == -1)
         {
             printf("send failed\n");
             return 0;
         }
-        else
-        {
-            printf("successfully sent %d bytes to %u from %u\n", sent, clientAddr.sin_port, adr_inet.sin_port);
-        }
-		sleep(1);
-		i--;
+		usleep(10);
+		gettimeofday(&currentTime);
+		relativeTime = (currentTime.tv_sec-startTime.tv_sec)+(currentTime.tv_usec-startTime.tv_usec)/1000000.0;
+        // else
+        // {
+        //     printf("successfully sent %d bytes to %u from %u\n", sent, clientAddr.sin_port, adr_inet.sin_port);
+        // }
     }
 	
-
 	close(sock);
+	printf("Server exiting \n");
 	return 0;
 }

@@ -4,12 +4,21 @@
 
 int main(int argc,char **argv) {
 
-    if (argc != 5)
+    if (argc != 7)
 	{
 		printf("invalid parameters.\n");
-		printf("USAGE %s <source-ip> <target-ip> <src-port> <target-port>\n", argv[0]);
+		printf("USAGE %s <source-ip> <target-ip> <src-port> <target-port> <file-name> <duration>\n", argv[0]);
 		return 1;
 	}
+	double timeToRun = strtod(argv[6], NULL);
+	printf("%f\n", timeToRun);
+    FILE *fptr;
+    fptr = fopen(argv[5], "w");
+    // exiting program 
+    if (fptr == NULL) {
+        printf("Error!");
+        exit(1);
+    };
 
 	srand(time(NULL));
 
@@ -74,9 +83,19 @@ int main(int argc,char **argv) {
     char clientip[INET_ADDRSTRLEN];
 
     printf("client receiving data on port %u\n", saddr.sin_port);
+
+	struct timeval startTime;
+	struct timeval currentTime;
+	double relativeTime=0;
 	
-	while (1) {
-		receive_from(sock, recvbuf, sizeof(recvbuf), &saddr);
+	gettimeofday(&startTime,NULL);
+	fprintf(fptr, "time, size\n");
+    
+	while (relativeTime <= timeToRun) {
+		int r_size = receive_from(sock, recvbuf, sizeof(recvbuf), &saddr);
+		gettimeofday(&currentTime);
+		relativeTime = (currentTime.tv_sec-startTime.tv_sec)+(currentTime.tv_usec-startTime.tv_usec)/1000000.0;
+		fprintf(fptr, "%f, %d\n", relativeTime, r_size);
 		// do {
 		// 	int receive = recvfrom(sock, recvbuf, sizeof(recvbuf), 0, NULL, NULL);
 		// 	memcpy(&d_port, recv + 22, sizeof(d_port));
@@ -90,7 +109,8 @@ int main(int argc,char **argv) {
 		// while (d_port != saddr.sin_port);
 		// printf("YES: got packet on port: %u : %u\n", d_port, saddr.sin_port);
 	}
-
+	
+    fclose(fptr);
     printf("Client exiting \n");
     close(sock);
     return 0;
